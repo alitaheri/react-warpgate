@@ -1,0 +1,43 @@
+{
+  "name": "react-warpgate",
+  "version": "0.0.1",
+  "description": "Higher order component to warp imperative method calls down the tree",
+  "main": "index.js",
+  "files": [
+    "index.js",
+    "typings.d.ts"
+  ],
+  "scripts": {
+    "build": "tsc src/index.tsx --outDir . --jsx react --module commonjs --removeComments",
+    "prepublish": "typings install && npm run build",
+    "ci-test": "npm run test",
+    "pretest": "tsc",
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alitaheri/react-warpgate.git"
+  },
+  "keywords": [
+    "imperative",
+    "react"
+  ],
+  "author": "Ali Taheri Moghaddar",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/alitaheri/react-warpgate/issues"
+  },
+  "homepage": "https://github.com/alitaheri/react-warpgate#readme",
+  "peerDependencies": {
+    "react": ">=0.4.0"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "jsdom": "^8.0.4",
+    "mocha": "^2.4.5",
+    "react": "^0.14.7",
+    "react-addons-test-utils": "^0.14.7",
+    "typescript": "^1.7.5",
+    "typings": "^0.6.8"
+  }
+}
