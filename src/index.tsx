@@ -63,7 +63,7 @@ export default function warpgate(methods: string | string[] | __Warpgate.Methods
       }
 
       render() {
-        return React.createElement<any>(Component, this.targets);
+        return <Component {...this.props} {...this.targets}/>;
       }
     }
 
