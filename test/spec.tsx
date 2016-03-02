@@ -14,7 +14,7 @@ class Test extends React.Component<any, any> {
 
   constructor(props) {
     super(props);
-    this.state = { val: 1 };
+    this.state = { val: props.val || 1 };
   }
 
   return2() {
@@ -112,5 +112,13 @@ describe('Warpgate', () => {
     const WrappedTest = wrapper(SomeHocFunctionComponent);
     const dom: any = TestUtils.renderIntoDocument(<WrappedTest/>);
     dom.focus();
+  });
+
+  it('should pass down all props', () => {
+    const wrapper = warpgate('returnValIncrement');
+    const WrappedTest: any = wrapper(SomeHocFunctionComponent);
+    const dom: any = TestUtils.renderIntoDocument(<WrappedTest val={5}/>);
+    expect(dom.returnValIncrement()).to.be.equals(5);
+    expect(dom.returnValIncrement()).to.be.equals(6);
   });
 });
