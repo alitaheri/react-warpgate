@@ -46,9 +46,11 @@ class SomeSmartComponent extends React.Component<any, any> {
   }
 }
 
+const SomeHocFunctionComponent: any = props => <SomeSmartComponent {...props}/>;
+
 class SomeHocClassComponent extends React.Component<any, any> {
   render() {
-    return React.createElement(SomeSmartComponent, this.props);
+    return <SomeSmartComponent {...this.props}/>;
   }
 }
 
@@ -103,5 +105,12 @@ describe('Warpgate', () => {
     const wrapper = warpgate({});
     const WrappedTest = wrapper(SomeHocClassComponent);
     const dom: any = TestUtils.renderIntoDocument(<WrappedTest/>);
+  });
+
+  it('should work with function components', () => {
+    const wrapper = warpgate({ input: 'focus' });
+    const WrappedTest = wrapper(SomeHocFunctionComponent);
+    const dom: any = TestUtils.renderIntoDocument(<WrappedTest/>);
+    dom.focus();
   });
 });
