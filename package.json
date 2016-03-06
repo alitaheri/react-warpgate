@@ -9,7 +9,7 @@
     "typings.json"
   ],
   "scripts": {
-    "build": "tsc -d src/index.tsx --outDir . --jsx react --module commonjs --removeComments",
+    "build": "tsc -d typings/main.d.ts src/index.tsx --outDir . --jsx react --module commonjs --removeComments",
     "prepublish": "typings install && npm run build",
     "ci-test": "npm run test",
     "pretest": "tsc",

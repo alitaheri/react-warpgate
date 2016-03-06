@@ -1,5 +1,3 @@
-/// <reference path="../typings/main.d.ts" />
-
 import * as React from 'react';
 
 const WARPGATE_DEFAULT_TARGET_NAME = 'target';
