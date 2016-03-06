@@ -100,7 +100,7 @@ const WarpedCuteTextBox = warpgate({
 })(CuteTextBox);
 
 const instance = ReactDOM(<WarpedCuteTextBox />, document.getElementById('container'));
-// Called on the input element
+// Called on the input element.
 instance.focus();
 instance.blur();
 instance.click();
@@ -109,9 +109,62 @@ instance.select();
 instance.sayHello();
 ```
 
-Currently aliasing is not supported. In other words you can't have 2 targets with `focus` methods.
-With aliasing it would be: `focusInput1 -> input1.focus()` and `focusInput2 -> input2.focus()`. But
-that's not implemented yet.
+### Alias
+
+To warp common methods from multiple targets it is possible to alias methods.
+This can also be useful to provide compatibility when renaming methods since
+many aliases can point to the same method. To alias a method simple import `alias`
+and put `alias(method: string, alias: string)` wherever you would normally
+put a method name.
+
+```js
+import React from 'react';
+import ReactDOM from 'react-dom';
+import warpgate, {alias} from 'react-warpgate';
+
+class MultiTargetComponent extends React.Component {
+  sayHello() {
+    alert('hello');
+  }
+
+  render() {
+    return (
+      <div>
+        <input ref={this.props.target1} type="text"/>
+        <input ref={this.props.target2} type="text"/>
+      </div> 
+    );
+  }
+}
+
+const SomeHOC = (props) => <MultiTargetComponent {...props}/>;
+
+const WarpedSomeHOC = warpgate({
+  target1: [
+    'focus',
+    'blur',
+    alias('click', 'clickFirst'),
+    alias('click', 'clickMe'),
+    'select',
+  ],
+  target2: alias('focus', 'focusSecond'),
+})(SomeHOC);
+
+// Also possible: 
+// warpgate(alias('click', 'tap'))
+// warpgate(['focus', alias('select', 'selectMe')])
+
+const instance = ReactDOM(<WarpedSomeHOC />, document.getElementById('container'));
+
+// All called on the first input.
+instance.focus();
+instance.blur();
+// Both will call click on the first input.
+instance.clickFirst();
+instance.clickMe();
+// Called on the second input.
+instance.focusSecond();
+```
 
 ## Typings
 

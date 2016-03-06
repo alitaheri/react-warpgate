@@ -8,7 +8,7 @@ import * as jsdom from 'jsdom';
 (global as any).document = jsdom.jsdom('<html><body><div id="root"></div></body></html>');
 (global as any).window = (document as any).defaultView;
 
-import warpgate from '../src';
+import warpgate, {alias} from '../src';
 
 class Test extends React.Component<any, any> {
 
@@ -32,17 +32,24 @@ class Test extends React.Component<any, any> {
   }
 
   render() {
-    return <input
-      ref={this.props.input}
-      type="text"
-      defaultValue="Hello"
-      />;
+    return (
+      <input
+        ref={this.props.input}
+        type="text"
+        defaultValue="Hello"
+        />
+    );
   }
 }
 
 class SomeSmartComponent extends React.Component<any, any> {
   render() {
-    return <Test {...this.props} ref={this.props.target}/>;
+    return (
+      <div>
+        <Test {...this.props} ref={this.props.target}/>
+        <Test ref={this.props.target2}/>
+        </div>
+    );
   }
 }
 
@@ -121,4 +128,83 @@ describe('Warpgate', () => {
     expect(dom.returnValIncrement()).to.be.equals(5);
     expect(dom.returnValIncrement()).to.be.equals(6);
   });
+
+  describe('alias', () => {
+
+    it('should properly alias a sinlge method', () => {
+      const wrapper = warpgate(alias('returnFirstPlusSecond', 'myMethod'));
+      const WrappedTest = wrapper(SomeHocClassComponent);
+      const dom: any = TestUtils.renderIntoDocument(<WrappedTest/>);
+      expect(dom.myMethod(3, 5)).to.be.equals(8);
+    });
+
+    it('should properly alias some methods within an array', () => {
+      const wrapper = warpgate([
+        alias('returnFirstPlusSecond', 'myMethod'),
+        alias('returnValIncrement', 'myMethod2'),
+        'return2',
+      ]);
+      const WrappedTest = wrapper(SomeHocClassComponent);
+      const dom: any = TestUtils.renderIntoDocument(<WrappedTest/>);
+      expect(dom.myMethod(3, 5)).to.be.equals(8);
+      expect(dom.myMethod2()).to.be.equals(1);
+      expect(dom.myMethod2()).to.be.equals(2);
+      expect(dom.myMethod2()).to.be.equals(3);
+      expect(dom.return2()).to.be.equals(2);
+    });
+
+    it('should properly alias methods from mutiple targets', () => {
+      const wrapper = warpgate({
+        target: ['returnFirstPlusSecond', alias('returnValIncrement', 'myMethod')],
+        input: alias('focus', 'myFocus'),
+      });
+      const WrappedTest = wrapper(SomeHocClassComponent);
+      const dom: any = TestUtils.renderIntoDocument(<WrappedTest/>);
+      expect(dom.returnFirstPlusSecond(3, 5)).to.be.equals(8);
+      expect(dom.myMethod()).to.be.equals(1);
+      dom.myFocus();
+    });
+
+    it('should properly alias some common methods with different targets', () => {
+      const wrapper = warpgate({
+        target: [alias('returnFirstPlusSecond', 'someMethod'), alias('returnValIncrement', 'myval1')],
+        target2: ['returnFirstPlusSecond', alias('returnValIncrement', 'myval2')],
+      });
+
+      const WrappedTest = wrapper(SomeHocClassComponent);
+      const dom: any = TestUtils.renderIntoDocument(<WrappedTest/>);
+
+      expect(dom.someMethod(3, 5)).to.be.equals(8);
+      expect(dom.returnFirstPlusSecond(2, 7)).to.be.equals(9);
+
+      expect(dom.myval1()).to.be.equals(1);
+      expect(dom.myval1()).to.be.equals(2);
+
+      expect(dom.myval2()).to.be.equals(1);
+      expect(dom.myval2()).to.be.equals(2);
+
+      expect(dom.myval1()).to.be.equals(3);
+      expect(dom.myval1()).to.be.equals(4);
+
+      expect(dom.myval2()).to.be.equals(3);
+      expect(dom.myval2()).to.be.equals(4);
+    });
+
+    it('should properly alias the same method multiple times', () => {
+      const wrapper = warpgate([
+        alias('returnValIncrement', 'retval1'),
+        alias('returnValIncrement', 'retval2'),
+        alias('returnValIncrement', 'retval3'),
+      ]);
+      const WrappedTest = wrapper(SomeHocClassComponent);
+      const dom: any = TestUtils.renderIntoDocument(<WrappedTest/>);
+      expect(dom.retval1()).to.be.equals(1);
+      expect(dom.retval3()).to.be.equals(2);
+      expect(dom.retval2()).to.be.equals(3);
+      expect(dom.retval1()).to.be.equals(4);
+      expect(dom.retval3()).to.be.equals(5);
+    });
+
+  });
+
 });

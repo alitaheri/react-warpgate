@@ -4,63 +4,106 @@ import * as React from 'react';
 
 const WARPGATE_DEFAULT_TARGET_NAME = 'target';
 
-interface NormalMap {
-  [method: string]: Array<string>;
+export class MethodAlias {
+  public name: string;
+  public alias: string;
+
+  constructor(method: string, alias: string) {
+    this.name = method;
+    this.alias = alias;
+  }
 }
 
-export interface Target {
-  (instance: any): void;
+export function alias(method: string, alias: string): MethodAlias {
+  return new MethodAlias(method, alias);
 }
 
-export interface Methods extends Array<string> { }
+export type Method = string | MethodAlias;
 
 export interface MethodsMap {
-  [method: string]: Array<string> | string;
+  [method: string]: Method[] | Method;
 }
 
 export interface Wrapper {
   <P>(component: __React.ComponentClass<P>): __React.ComponentClass<P>;
 }
 
-function normalize(methods: string | string[] | MethodsMap): NormalMap {
+interface NormalMap {
+  [target: string]: MethodAlias[];
+}
 
-  if (typeof methods === 'string') {
+function normalize(methods: Method | Method[] | MethodsMap): NormalMap {
+
+  if (methods instanceof MethodAlias) {
     return { [WARPGATE_DEFAULT_TARGET_NAME]: [methods] };
   }
 
+  if (typeof methods === 'string') {
+    return { [WARPGATE_DEFAULT_TARGET_NAME]: [alias(methods, methods)] };
+  }
+
   if (Array.isArray(methods)) {
-    return { [WARPGATE_DEFAULT_TARGET_NAME]: methods };
+    const normalArray: MethodAlias[] = [];
+
+    methods.forEach(method => {
+      if (method instanceof MethodAlias) {
+        normalArray.push(method);
+      }
+      if (typeof method === 'string') {
+        normalArray.push(alias(method, method));
+      }
+    });
+
+    return { [WARPGATE_DEFAULT_TARGET_NAME]: normalArray };
   }
 
   if (methods && typeof methods === 'object') {
-    for (const key in methods) {
-      if (typeof methods[key] === 'string') {
-        methods[key] = [methods[key]];
+    const normalMap: NormalMap = {};
+
+    Object.keys(methods).forEach(key => {
+      if (methods[key] instanceof MethodAlias) {
+
+        normalMap[key] = [methods[key]];
+
+      } else if (typeof methods[key] === 'string') {
+
+        normalMap[key] = [alias(methods[key], methods[key])];
+
+      } else if (Array.isArray(methods[key])) {
+
+        const array: MethodAlias[] = [];
+
+        methods[key].forEach(method => {
+          if (method instanceof MethodAlias) {
+            array.push(method);
+          }
+          if (typeof method === 'string') {
+            array.push(alias(method, method));
+          }
+        });
+        normalMap[key] = array;
+
       }
-    }
-    return methods as NormalMap;
+    });
+
+    return normalMap;
   }
 
   return {};
 }
 
-export default function warpgate(methods: string): Wrapper;
-export default function warpgate(methods: Methods): Wrapper;
+export default function warpgate(methods: Method): Wrapper;
+export default function warpgate(methods: Method[]): Wrapper;
 export default function warpgate(methods: MethodsMap): Wrapper;
-export default function warpgate(methods: string | Methods | MethodsMap): Wrapper {
+export default function warpgate(methods: Method | Method[] | MethodsMap): Wrapper {
 
   const methodMap = normalize(methods);
-
-  const targetNames = Object.keys(methodMap);
-
-  const methodTarget: { [method: string]: string } = {};
-  targetNames.forEach(key => methodMap[key].forEach(method => methodTarget[method] = key));
 
   return function wrapper(Component: __React.ComponentClass<any>) {
 
     class WrappedComponent extends React.Component<any, any> {
 
-      private targets: { [name: string]: Target };
+      private targets: { [name: string]: (instance: any) => void };
 
       constructor(props) {
         super(props);
@@ -69,12 +112,22 @@ export default function warpgate(methods: string | Methods | MethodsMap): Wrappe
         this.state = {};
 
         // Create targets and pass them down
-        targetNames.forEach(name => this.targets[name] = instance => this.setState({ [name]: instance }));
+        Object.keys(methodMap).forEach(target => {
+          this.targets[target] = instance => this.setState({ [target]: instance });
+        });
 
         // Create proxies on this component
-        Object.keys(methodTarget).forEach(method => {
-          const targetName = methodTarget[method];
-          this[method] = (...args) => this.state[targetName][method](...args);
+        Object.keys(methodMap).forEach(target => {
+          const aliases = methodMap[target];
+
+          aliases.forEach(methodAlias => {
+
+            this[methodAlias.alias] = (...args) => {
+              return this.state[target][methodAlias.name](...args);
+            };
+
+          });
+
         });
       }
 
