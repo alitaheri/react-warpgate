@@ -5,10 +5,11 @@
   "main": "index.js",
   "files": [
     "index.js",
-    "typings.d.ts"
+    "index.d.ts",
+    "typings.json"
   ],
   "scripts": {
-    "build": "tsc src/index.tsx --outDir . --jsx react --module commonjs --removeComments",
+    "build": "tsc -d src/index.tsx --outDir . --jsx react --module commonjs --removeComments",
     "prepublish": "typings install && npm run build",
     "ci-test": "npm run test",
     "pretest": "tsc",

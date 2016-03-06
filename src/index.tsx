@@ -1,5 +1,4 @@
 /// <reference path="../typings/main.d.ts" />
-/// <reference path="../typings.d.ts" />
 
 import * as React from 'react';
 
@@ -9,7 +8,21 @@ interface NormalMap {
   [method: string]: Array<string>;
 }
 
-function normalize(methods: string | string[] | __Warpgate.MethodsMap): NormalMap {
+export interface Target {
+  (instance: any): void;
+}
+
+export interface Methods extends Array<string> { }
+
+export interface MethodsMap {
+  [method: string]: Array<string> | string;
+}
+
+export interface Wrapper {
+  <P>(component: __React.ComponentClass<P>): __React.ComponentClass<P>;
+}
+
+function normalize(methods: string | string[] | MethodsMap): NormalMap {
 
   if (typeof methods === 'string') {
     return { [WARPGATE_DEFAULT_TARGET_NAME]: [methods] };
@@ -31,7 +44,10 @@ function normalize(methods: string | string[] | __Warpgate.MethodsMap): NormalMa
   return {};
 }
 
-export default function warpgate(methods: string | string[] | __Warpgate.MethodsMap): __Warpgate.Wrapper {
+export default function warpgate(methods: string): Wrapper;
+export default function warpgate(methods: Methods): Wrapper;
+export default function warpgate(methods: MethodsMap): Wrapper;
+export default function warpgate(methods: string | Methods | MethodsMap): Wrapper {
 
   const methodMap = normalize(methods);
 
@@ -40,11 +56,11 @@ export default function warpgate(methods: string | string[] | __Warpgate.Methods
   const methodTarget: { [method: string]: string } = {};
   targetNames.forEach(key => methodMap[key].forEach(method => methodTarget[method] = key));
 
-  return function wrapper<P>(Component: __React.ComponentClass<P>) {
+  return function wrapper(Component: __React.ComponentClass<any>) {
 
     class WrappedComponent extends React.Component<any, any> {
 
-      private targets: { [name: string]: __Warpgate.Target };
+      private targets: { [name: string]: Target };
 
       constructor(props) {
         super(props);
