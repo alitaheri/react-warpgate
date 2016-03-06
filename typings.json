@@ -1,6 +1,6 @@
 {
   "name": "typings",
-  "main": "typings.d.ts",
+  "main": "index.d.ts",
   "author": "Ali Taheri Moghaddar <ali.taheri.m@gmail.com>",
   "description": "Higher order component to warp imperative method calls down the tree",
   "ambientDependencies": {

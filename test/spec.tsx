@@ -61,6 +61,26 @@ class SomeHocClassComponent extends React.Component<any, any> {
   }
 }
 
+class ManualBind extends React.Component<any, any> {
+  componentDidMount() {
+    this.props.target(this);
+  }
+
+  componentWillUnmount() {
+    this.props.target(null);
+  }
+
+  getVal() {
+    return this.props.val;
+  }
+
+  render() {
+    return null;
+  }
+}
+
+const ManualBindHocComponent: any = props => <ManualBind {...props}/>;
+
 describe('Warpgate', () => {
   it('should warp method invocation to custom components', () => {
     const wrapper = warpgate('return2');
@@ -127,6 +147,13 @@ describe('Warpgate', () => {
     const dom: any = TestUtils.renderIntoDocument(<WrappedTest val={5}/>);
     expect(dom.returnValIncrement()).to.be.equals(5);
     expect(dom.returnValIncrement()).to.be.equals(6);
+  });
+
+  it('should work with manual binding', () => {
+    const wrapper = warpgate('getVal');
+    const WrappedTest: any = wrapper(ManualBindHocComponent);
+    const dom: any = TestUtils.renderIntoDocument(<WrappedTest val={6}/>);
+    expect(dom.getVal()).to.be.equals(6);
   });
 
   describe('alias', () => {

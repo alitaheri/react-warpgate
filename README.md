@@ -46,6 +46,44 @@ instance.focus();
 
 Please note that, calling these methods on unmounted elements is an error and will throw.
 
+### Manual Binding
+
+In case you wish to bind target without having to use ref you can manually bind
+the target to your component.
+
+```js
+import React from 'react';
+import ReactDOM from 'react-dom';
+import warpgate from 'react-warpgate';
+
+class ManuallyBoundComponent extends React.Component<any, any> {
+  componentDidMount() {
+    this.props.target(this);
+  }
+
+  componentWillUnmount() {
+    this.props.target(null);
+  }
+
+  focus() {
+    // Some loigc to manage focus.
+    this.refs.input.focus();
+  }
+
+  render() {
+    return <input type="text" ref="input" />;
+  }
+}
+
+const WarpedManuallyBoundComponent = warpgate('focus')(CuteTextBox);
+
+const instance = ReactDOM(<WarpedManuallyBoundComponent />, document.getElementById('container'));
+// Calls ManuallyBoundComponent's focus.
+instance.focus();
+```
+
+Make sure you call target with `null` in `componentWillUnmount` or you'll have memory leak.
+
 ### Multiple Methods
 
 You can use warpgate to warp more than one function.
